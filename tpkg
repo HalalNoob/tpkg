@@ -1,13 +1,24 @@
 #!/bin/bash
 
-# TPKG=TEST PACKAGE MANAGER. A TINY PACKAGE MANAGER FORK AND WRITTEN BECAUSE I WANT TO IMPROVING MY BASH KNOWLEDGE
+# TPKG=TEST PACKAGE MANAGER. A TINY PACKAGE MANAGER FORK AND WRITTEN BECAUSE I WANT TO IMPROVE MY BASH KNOWLEDGE
 
-# Set the repository URL where packages are hosted
-url="example.com/packages/"  # Replace with your website's URL
-root="/home/richard/root"        # Absolute path of the root directory
+# Default configuration variables
+default_url="example.com/packages/"  # Replace with your website's URL
+default_root="/home/richard/root"    # Absolute path of the root directory
+
+# User-configurable variables
+url=${TPKG_URL:-$default_url}
+root=${TPKG_ROOT:-$default_root}
+
+# Logging function
+log() {
+    echo "$(date): $1" >> "/home/$(whoami)/.tpkg/log.txt"
+}
+log "Script executed"
+
 # Check Root
 if [ "$(id -u)" != "0" ]; then
-    echo -e ""\033[0;31mSorry\033[0m, You need root permission to run this script.""
+    echo -e "\033[0;31mSorry\033[0m, You need root permission to run this script."
     exit 1
 fi
 
@@ -18,10 +29,10 @@ if [[ $check_url != *"200"* ]]; then
     exit 1
 fi
 
-  # Change the current directory to the specified root directory
-cd "$root"
+# Change the current directory to the specified root directory
+cd "$root" || exit
 
-  # Check if the directory change was successful
+# Check if the directory change was successful
 if [ "$(pwd)" != "$root" ]; then
     echo -e "\033[0;31mCould not change directory to the root prefix.\033[0m"
     exit 1
@@ -69,19 +80,7 @@ install_package() {
         echo "Installation successful."
 
         # Logging: Create a log file for installed packages
-        if [ ! -d "/home/$(whoami)/.tpkg/" ]; then
-            mkdir -p "/home/$(whoami)/.tpkg/"
-        fi
-
-        if [ ! -f "/home/$(whoami)/.tpkg/installed.txt" ]; then
-            touch "/home/$(whoami)/.tpkg/installed.txt"
-        fi
-
-        if [ ! -f "/home/$(whoami)/.tpkg/removed.txt" ]; then
-            touch "/home/$(whoami)/.tpkg/removed.txt"
-        fi
-
-        echo "$package_name installed on $(date)" >> "/home/$(whoami)/.tpkg/installed.txt"
+        log "$package_name installed"
     else
         echo -e "\033[0;31mInstallation failed.\033[0m"
         exit 1
@@ -104,9 +103,10 @@ remove_package() {
     rm -rf "usr/tdb/$package_name"  # This line removes the package
     
     # Logging: Update the 'removed.txt' log file
-    echo "$package_name removed on $(date)" >> "/home/$(whoami)/.tpkg/removed.txt"
+    log "$package_name removed"
     echo "$package_name successfully removed."
 }
+
 # Function: Package Update
 update_package() {
     local package_name="$1"
