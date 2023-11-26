@@ -233,6 +233,40 @@ version_control() {
     echo "Documentation: $documentation"
 }
 
+# Function: Dependency Resolution with Package Installation
+resolve_dependencies_with_installation() {
+    local package_name="$1"
+
+    if [ -z "$package_name" ]; then
+        echo -e "\033[0;31mPlease specify a package to resolve dependencies.\033[0m"
+        exit 1
+    elif [ ! -d "usr/tdb/$package_name" ]; then
+        echo -e "\033[0;31m$package_name is not installed.\033[0m"
+        exit 1
+    fi
+
+    # Check if dependencies file exists for the package
+    if [ -f "usr/tdb/$package_name/dependencies.txt" ]; then
+        echo "Resolving dependencies for $package_name..."
+        # Read dependencies and install them
+        while IFS= read -r dependency; do
+            install_package "$dependency"
+        done < "usr/tdb/$package_name/dependencies.txt"
+
+        # Install the main package after resolving dependencies
+        install_package "$package_name"
+
+        echo "Dependencies resolved for $package_name."
+    else
+        echo "No dependencies found for $package_name."
+    fi
+}
+
+# Function: Dependency Resolution with Package Installation. ipkg is just resolve_dependencies_with_installation
+ipkg() {
+    resolve_dependencies_with_installation "$1"
+}
+
 # Function to read log files after an action
 read_logs "/home/$(whoami)/.tpkg/installed.txt"
 read_logs "/home/$(whoami)/.tpkg/removed.txt"
