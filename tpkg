@@ -33,7 +33,7 @@ if [ "$1" = "install" ]; then
         rm "$2.tar"
         echo "install ok"
 
-        # Log işlevi: installed.txt adında bir log dosyası oluştur
+        # Log function: create a log file with installed.txt
         if [ ! -d "/home/$(whoami)/.tpkg/" ]; then
             mkdir -p "/home/$(whoami)/.tpkg/"
         fi
