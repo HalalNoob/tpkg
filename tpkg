@@ -6,6 +6,13 @@
 url="yourwebsite.com/packages/"  # Replace with your website's URL
 root="/home/richard/root"        # Absolute path of the root directory
 
+# Check if the repository URL is accessible
+check_url=$(curl -Is "$url" | head -n 1)
+if [[ $check_url != *"200"* ]]; then
+    echo -e "\033[0;31mCould not access $url. Please check your internet connection or the URL.\033[0m"
+    exit 1
+fi
+
 # Change the current directory to the specified root directory
 cd "$root"
 
@@ -80,7 +87,6 @@ install_package() {
 remove_package() {
     local package_name="$1"
     
-    # Check if package name is specified
     if [ -z "$package_name" ]; then
         echo -e "\033[0;31mPlease specify a package to remove.\033[0m"
         exit 1
@@ -90,11 +96,12 @@ remove_package() {
     fi
     
     # Package removal process
-    # ...
-
+    rm -rf "usr/tdb/$package_name"  # This line removes the package
+    
+    # Logging: Update the 'removed.txt' log file
+    echo "$package_name removed on $(date)" >> "/home/$(whoami)/.tpkg/removed.txt"
     echo "$package_name successfully removed."
 }
-
 # Function: Package Update
 update_package() {
     local package_name="$1"
@@ -153,11 +160,10 @@ check_dependencies() {
     fi
 }
 
-# Function: Package Dependency Check
+# Dependency Checking Function - Adding a message for missing dependency list
 check_package_dependencies() {
     local package_name="$1"
     
-    # Check if package name is specified
     if [ -z "$package_name" ]; then
         echo -e "\033[0;31mPlease specify a package to check its dependencies.\033[0m"
         exit 1
@@ -166,9 +172,25 @@ check_package_dependencies() {
         exit 1
     fi
     
-    # List dependencies of the package if a 'dependencies.txt' file exists
+    # Check and display dependencies if the 'dependencies.txt' file exists
     if [ -f "usr/tdb/$package_name/dependencies.txt" ]; then
         echo "Dependencies for $package_name:"
         cat "usr/tdb/$package_name/dependencies.txt"
     else
-        echo "No dependencies found for $
+        echo "No dependencies found for $package_name."
+    fi
+}
+
+# Read Logs Function - To read and display log files
+read_logs() {
+    local log_file="$1"
+    if [ -f "$log_file" ]; then
+        echo "Contents of $log_file:"
+        cat "$log_file"
+    else
+        echo "Log file $log_file not found or empty."
+    fi
+}
+# Function to read log files after an action
+read_logs "/home/$(whoami)/.tpkg/installed.txt"
+read_logs "/home/$(whoami)/.tpkg/removed.txt"
