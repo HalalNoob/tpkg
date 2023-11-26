@@ -1,69 +1,54 @@
 #!/bin/bash
 
-# #######################################################
-#
-# tpkg: a simple shell-script package manager and a fork
+# Tpkg: a simple shell-script package manager and a fork
 # no automatic dependency resolution abilities
 #     (kind of similar to Slackware's)
 #
-#            Yusen Hu (c) 2018
-#
-# #######################################################
+# Forked by Halal Noob
 
-url="example.com"	# repository URL example
-srctype="net"			# can be either "net" or "dir" (unused for now)
-root="/home/richard/root"	# fake root directory. must be absolute path
+url="example.com"        # repository URL example
+srctype="net"            # can be either "net" or "dir" (unused for now)
+root="/home/richard/root"    # fake root directory. must be absolute path
 
-cd $root		# change directory to relative root
+cd "$root"        # change directory to relative root
 
 if [ "$(pwd)" != "$root" ]; then
-	echo "failed to change directory to root prefix"
-	exit
+    echo "failed to change directory to root prefix"
+    exit 1
 fi
 
 if [ "$1" = "install" ]; then
+    if [ "$2" = "" ]; then
+        echo "you need to specify a package to install"
+        exit 1
+    elif [ -d "usr/tdb/$2" ]; then
+        echo "$2 is already installed"
+        exit 1
+    fi
 
-	if [ "$2" = "" ]; then
-		echo "you need to specify a package to install"
-		exit
-	elif [ -d "usr/tdb/$2" ]; then
-		echo "$2 is already installed"
-		exit
-	fi
+    busybox wget -cq "$url/$2.tar"    # get package from url
 
-	busybox wget -cq "$url/$2.tar"	# get package from url
+    if [ "$?" = "0" ]; then    # judge the return value of busybox
+        tar -xf "$2.tar"
+        rm "$2.tar"
+        echo "install ok"
 
-	if [ "$?" = "0" ]; then			# judge the return value of busybox
-		tar -xf "$2.tar"
-		rm "$2.tar"
-		echo "install ok"
-	else
-		echo "install failed"
-	fi
-	
-elif [ "$1" = "remove" ]; then
+        # Log işlevi: installed.txt adında bir log dosyası oluştur
+        if [ ! -d "/home/$(whoami)/.tpkg/" ]; then
+            mkdir -p "/home/$(whoami)/.tpkg/"
+        fi
 
-	if [ ! -d "usr/tdb/$2" ]; then
-		echo "$2 is not installed"
-		exit
-	fi
+        if [ ! -f "/home/$(whoami)/.tpkg/installed.txt" ]; then
+            touch "/home/$(whoami)/.tpkg/installed.txt"
+        fi
 
-	if [ -f "usr/tdb/$2/rmf" ]; then
-		rm $(cat usr/tdb/$2/rmf)	# remove files
-	fi
-	if [ -f "usr/tdb/$2/rmd" ]; then
-		rmdir $(cat usr/tdb/$2/rmd)	# remove directories
-	fi
-	rm -r "usr/tdb/$2"	# remove record inside tdb
-
-	echo "$2 removed"
+        echo "$2 installed at $(date)" >> "/home/$(whoami)/.tpkg/installed.txt"
+    else
+        echo "install failed"
+        exit 1
+    fi
 
 elif [ "$1" = "" ]; then
-
-	echo "no actions specified"
-
-else
-
-	echo "unrecognized command"
-
+    echo "no actions specified"
+    exit 1
 fi
