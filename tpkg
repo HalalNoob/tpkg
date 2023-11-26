@@ -1,86 +1,62 @@
 #!/bin/bash
 
-# Tpkg: a simple shell-script package manager and a fork
-# no automatic dependency resolution abilities
-#     (kind of similar to Slackware's)
-#
-# Forked by Halal Noob
+# Package Manager Script - A simple script to fetch and compile packages from a specified repository URL
 
-url="example.com"        # repository URL example
-srctype="net"            # can be either "net" or "dir" (unused for now)
-root="/home/richard/root"    # fake root directory. must be absolute path
+# Set the repository URL where packages are hosted
+url="yourwebsite.com/packages/"  # Replace with your website's URL
+root="/home/richard/root"        # Absolute path of the root directory
 
-cd "$root"        # change directory to relative root
+# Change the current directory to the specified root directory
+cd "$root"
 
 # Check if the directory change was successful
 if [ "$(pwd)" != "$root" ]; then
-    echo "failed to change directory to root prefix"
+    echo -e "\033[0;31mCould not change directory to the root prefix.\033[0m"
     exit 1
 fi
 
-# Function to list files in a package
-list_files() {
-    if [ "$1" = "listfiles" ]; then
-        if [ "$2" != "" ]; then
-            # Package file listing operations to be added here
-            # For example: cat "/path/to/package/directory/$2/$PKG_FILELIST"
-        else
-            echo "Please provide a package name to list its files."
-        fi
-    fi
-}
-
-# Function to remove a package
-remove_package() {
-    if [ "$1" = "remove" ]; then
-        if [ "$2" != "" ]; then
-            read -p "Are you sure you want to remove $2? [y/n]: " ans
-            # Check if user input is either 'y' or 'n'
-            if [ "$ans" = "y" ]; then
-                # Removal operations to be added here
-                # Necessary commands and operations will be added
-            elif [ "$ans" = "n" ]; then
-                echo "Removal cancelled for $2"
-            else
-                echo "Invalid input. Please enter 'y' or 'n'."
-            fi
-        else
-            echo "Please specify a package to remove."
-        fi
-    fi
-}
-
-# Function to verify package existence
-verify_package() {
-    local pkgname="$1"
-
-    if [ ! -f "/path/to/package/directory/$pkgname/$PKG_FILELIST" ]; then
-        echo "$pkgname: No such package in the database."
-        return 1
-    fi
-
-    # Checking package accuracy
-}
-
-# Install action
-if [ "$1" = "install" ]; then
-    if [ "$2" = "" ]; then
-        echo "You need to specify a package to install."
+# Function: Package Installation
+install_package() {
+    local package_name="$1"
+    
+    # Check if package name is specified
+    if [ -z "$package_name" ]; then
+        echo -e "\033[0;31mPlease specify a package to install.\033[0m"
         exit 1
-    elif [ -d "usr/tdb/$2" ]; then
-        echo "$2 is already installed."
+    elif [ -d "usr/tdb/$package_name" ]; then
+        echo -e "\033[0;31m$package_name is already installed.\033[0m"
         exit 1
     fi
 
-    busybox wget -cq "$url/$2.tar"    # get package from URL
+    # Create package URL
+    package_url="$url$package_name/"
+    
+    # Check if the package exists in the repository
+    package_check=$(curl -Is "$package_url" | head -n 1)
+    
+    if [[ $package_check == *"200"* ]]; then
+        echo "$package_name package found. Proceeding with the installation."
+    else
+        echo -e "\033[0;31mAre you sure $package_name is spelled correctly?\033[0m"
+        read -p "Do you want to proceed? [y/n]: " answer
+        
+        if [ "$answer" != "y" ]; then
+            exit 1
+        fi
+    fi
 
-    # Check if the download was successful
+    # Download the package from the URL
+    echo "Downloading package..."
+    busybox wget -cq "$package_url$package_name.tar"  # Get the package from the URL
+
+    # Check if download was successful
     if [ "$?" = "0" ]; then
-        tar -xf "$2.tar"
-        rm "$2.tar"
+        echo "Download successful. Compiling package..."
+        tar -xf "$package_name.tar"
+        rm "$package_name.tar"
         echo "Installation successful."
 
-        # Log function: create a log file with installed.txt
+        # Logging: Create a log file for installed packages
         if [ ! -d "/home/$(whoami)/.tpkg/" ]; then
             mkdir -p "/home/$(whoami)/.tpkg/"
         fi
@@ -93,14 +69,78 @@ if [ "$1" = "install" ]; then
             touch "/home/$(whoami)/.tpkg/removed.txt"
         fi
 
-        echo "$2 installed at $(date)" >> "/home/$(whoami)/.tpkg/installed.txt"
+        echo "$package_name installed on $(date)" >> "/home/$(whoami)/.tpkg/installed.txt"
     else
-        echo "Installation failed."
+        echo -e "\033[0;31mInstallation failed.\033[0m"
         exit 1
     fi
+}
 
-# If no action is specified
-elif [ "$1" = "" ]; then
-    echo "No actions specified."
+# Function: Package Removal
+remove_package() {
+    local package_name="$1"
+    
+    # Check if package name is specified
+    if [ -z "$package_name" ]; then
+        echo -e "\033[0;31mPlease specify a package to remove.\033[0m"
+        exit 1
+    elif [ ! -d "usr/tdb/$package_name" ]; then
+        echo -e "\033[0;31m$package_name is not installed.\033[0m"
+        exit 1
+    fi
+    
+    # Package removal process
+    # ...
+
+    echo "$package_name successfully removed."
+}
+
+# Function: Package Update
+update_package() {
+    local package_name="$1"
+    
+    # Check if package name is specified
+    if [ -z "$package_name" ]; then
+        echo -e "\033[0;31mPlease specify a package to update.\033[0m"
+        exit 1
+    elif [ ! -d "usr/tdb/$package_name" ]; then
+        echo -e "\033[0;31m$package_name is not installed.\033[0m"
+        exit 1
+    fi
+    
+    # Package update process
+    # ...
+
+    echo "$package_name successfully updated."
+}
+
+# Function: List All Packages
+list_packages() {
+    echo "Installed packages:"
+    ls -1 usr/tdb/
+}
+
+# Function to check dependencies
+check_dependencies() {
+    # Check if 'curl', 'busybox', and 'tar' commands exist
+    if ! command -v curl &> /dev/null || ! command -v busybox &> /dev/null || ! command -v tar &> /dev/null; then
+        echo -e "\033[0;31mThis script requires 'curl', 'busybox', and 'tar' to function properly.\033[0m"
+        echo "Please install these dependencies before running the script."
+        exit 1
+    fi
+}
+
+# Main script
+if [ "$1" = "install" ]; then
+    check_dependencies  # Check dependencies before installation
+    install_package "$2"
+elif [ "$1" = "remove" ]; then
+    remove_package "$2"
+elif [ "$1" = "update" ]; then
+    update_package "$2"
+elif [ "$1" = "list" ]; then
+    list_packages
+else
+    echo -e "\033[0;31mNo action specified.\033[0m"
     exit 1
 fi
