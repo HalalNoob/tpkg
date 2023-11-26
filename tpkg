@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# Package Manager Script - A script to fetch, compile, update packages, and show dependencies from a specified repository URL
+# TPKG=TEST PACKAGE MANAGER. A TINY PACKAGE MANAGER FORK AND WRITTEN BECAUSE I WANT TO IMPROVING MY BASH KNOWLEDGE
 
 # Set the repository URL where packages are hosted
-url="yourwebsite.com/packages/"  # Replace with your website's URL
+url="example.com/packages/"  # Replace with your website's URL
 root="/home/richard/root"        # Absolute path of the root directory
 
 # Check if the repository URL is accessible
