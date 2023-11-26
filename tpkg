@@ -1,16 +1,16 @@
 #!/bin/bash
 
-# ############################################
+# #######################################################
 #
-# tpkg: a simple shell-script package manager
+# tpkg: a simple shell-script package manager and a fork
 # no automatic dependency resolution abilities
 #     (kind of similar to Slackware's)
 #
 #            Yusen Hu (c) 2018
 #
-# ############################################
+# #######################################################
 
-url="127.0.0.1:8080"	# repository URL
+url="example.com"	# repository URL example
 srctype="net"			# can be either "net" or "dir" (unused for now)
 root="/home/richard/root"	# fake root directory. must be absolute path
 
