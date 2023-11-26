@@ -1,7 +1,7 @@
 
-# Tiny Package Manager for Microdot Linux
+# Test Package Manager
 
-tpkg: a simple shell-script package manager
+tpkg: a simple shell-script package manager and a fork
 
 no dependency checking. Kind of similar to Slackware's package manager.
 
