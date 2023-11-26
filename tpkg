@@ -12,30 +12,37 @@ root="/home/richard/root"    # fake root directory. must be absolute path
 
 cd "$root"        # change directory to relative root
 
+# Check if the directory change was successful
 if [ "$(pwd)" != "$root" ]; then
     echo "failed to change directory to root prefix"
     exit 1
 fi
 
+# Function to list files in a package
 list_files() {
     if [ "$1" = "listfiles" ]; then
         if [ "$2" != "" ]; then
-            # Paket dosyalarını listeleme işlemleri buraya eklenecek
-            # Örneğin: cat "/path/to/package/directory/$2/$PKG_FILELIST"
+            # Package file listing operations to be added here
+            # For example: cat "/path/to/package/directory/$2/$PKG_FILELIST"
         else
             echo "Please provide a package name to list its files."
         fi
     fi
 }
 
+# Function to remove a package
 remove_package() {
     if [ "$1" = "remove" ]; then
         if [ "$2" != "" ]; then
-            echo -n "Are you sure you want to remove $2?[y/n]: "
-            read ans
+            read -p "Are you sure you want to remove $2? [y/n]: " ans
+            # Check if user input is either 'y' or 'n'
             if [ "$ans" = "y" ]; then
-                # Kaldırma işlemleri burada yer alacak
-                # Gerekli komutlar ve işlemler eklenecek
+                # Removal operations to be added here
+                # Necessary commands and operations will be added
+            elif [ "$ans" = "n" ]; then
+                echo "Removal cancelled for $2"
+            else
+                echo "Invalid input. Please enter 'y' or 'n'."
             fi
         else
             echo "Please specify a package to remove."
@@ -43,6 +50,7 @@ remove_package() {
     fi
 }
 
+# Function to verify package existence
 verify_package() {
     local pkgname="$1"
 
@@ -51,25 +59,26 @@ verify_package() {
         return 1
     fi
 
-    # checking packet accuracy
-
+    # Checking package accuracy
 }
 
+# Install action
 if [ "$1" = "install" ]; then
     if [ "$2" = "" ]; then
-        echo "you need to specify a package to install"
+        echo "You need to specify a package to install."
         exit 1
     elif [ -d "usr/tdb/$2" ]; then
-        echo "$2 is already installed"
+        echo "$2 is already installed."
         exit 1
     fi
 
-    busybox wget -cq "$url/$2.tar"    # get package from url
+    busybox wget -cq "$url/$2.tar"    # get package from URL
 
-    if [ "$?" = "0" ]; then    # judge the return value of busybox
+    # Check if the download was successful
+    if [ "$?" = "0" ]; then
         tar -xf "$2.tar"
         rm "$2.tar"
-        echo "install ok"
+        echo "Installation successful."
 
         # Log function: create a log file with installed.txt
         if [ ! -d "/home/$(whoami)/.tpkg/" ]; then
@@ -80,13 +89,18 @@ if [ "$1" = "install" ]; then
             touch "/home/$(whoami)/.tpkg/installed.txt"
         fi
 
+        if [ ! -f "/home/$(whoami)/.tpkg/removed.txt" ]; then
+            touch "/home/$(whoami)/.tpkg/removed.txt"
+        fi
+
         echo "$2 installed at $(date)" >> "/home/$(whoami)/.tpkg/installed.txt"
     else
-        echo "install failed"
+        echo "Installation failed."
         exit 1
     fi
 
+# If no action is specified
 elif [ "$1" = "" ]; then
-    echo "no actions specified"
+    echo "No actions specified."
     exit 1
 fi
