@@ -18,16 +18,16 @@ if [[ $check_url != *"200"* ]]; then
     exit 1
 fi
 
-# Change the current directory to the specified root directory
+  # Change the current directory to the specified root directory
 cd "$root"
 
-# Check if the directory change was successful
+  # Check if the directory change was successful
 if [ "$(pwd)" != "$root" ]; then
     echo -e "\033[0;31mCould not change directory to the root prefix.\033[0m"
     exit 1
 fi
 
-# Function: Package Installation
+   # Function: Package Installation
 install_package() {
     local package_name="$1"
     
