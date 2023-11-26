@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Package Manager Script - A simple script to fetch and compile packages from a specified repository URL
+# Package Manager Script - A script to fetch, compile, update packages, and show dependencies from a specified repository URL
 
 # Set the repository URL where packages are hosted
 url="yourwebsite.com/packages/"  # Replace with your website's URL
@@ -108,10 +108,33 @@ update_package() {
         exit 1
     fi
     
-    # Package update process
-    # ...
+    # Fetch the latest version from the repository
+    latest_version=$(curl -s "$url$package_name/latest_version.txt")
+    current_version=$(cat "usr/tdb/$package_name/version.txt")
 
-    echo "$package_name successfully updated."
+    if [ "$latest_version" != "$current_version" ]; then
+        echo "Updating $package_name from version $current_version to $latest_version..."
+        
+        # Download the latest package version from the repository
+        echo "Downloading latest package..."
+        busybox wget -cq "$url$package_name/$latest_version/$package_name.tar"
+
+        # Check if download was successful
+        if [ "$?" = "0" ]; then
+            echo "Download successful. Compiling package..."
+            tar -xf "$package_name.tar"
+            rm "$package_name.tar"
+            echo "Update successful."
+
+            # Update the version file
+            echo "$latest_version" > "usr/tdb/$package_name/version.txt"
+        else
+            echo -e "\033[0;31mUpdate failed. Unable to download the latest version.\033[0m"
+            exit 1
+        fi
+    else
+        echo "$package_name is already up-to-date."
+    fi
 }
 
 # Function: List All Packages
@@ -130,17 +153,22 @@ check_dependencies() {
     fi
 }
 
-# Main script
-if [ "$1" = "install" ]; then
-    check_dependencies  # Check dependencies before installation
-    install_package "$2"
-elif [ "$1" = "remove" ]; then
-    remove_package "$2"
-elif [ "$1" = "update" ]; then
-    update_package "$2"
-elif [ "$1" = "list" ]; then
-    list_packages
-else
-    echo -e "\033[0;31mNo action specified.\033[0m"
-    exit 1
-fi
+# Function: Package Dependency Check
+check_package_dependencies() {
+    local package_name="$1"
+    
+    # Check if package name is specified
+    if [ -z "$package_name" ]; then
+        echo -e "\033[0;31mPlease specify a package to check its dependencies.\033[0m"
+        exit 1
+    elif [ ! -d "usr/tdb/$package_name" ]; then
+        echo -e "\033[0;31m$package_name is not installed.\033[0m"
+        exit 1
+    fi
+    
+    # List dependencies of the package if a 'dependencies.txt' file exists
+    if [ -f "usr/tdb/$package_name/dependencies.txt" ]; then
+        echo "Dependencies for $package_name:"
+        cat "usr/tdb/$package_name/dependencies.txt"
+    else
+        echo "No dependencies found for $
