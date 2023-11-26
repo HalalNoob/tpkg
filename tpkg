@@ -17,6 +17,44 @@ if [ "$(pwd)" != "$root" ]; then
     exit 1
 fi
 
+list_files() {
+    if [ "$1" = "listfiles" ]; then
+        if [ "$2" != "" ]; then
+            # Paket dosyalarını listeleme işlemleri buraya eklenecek
+            # Örneğin: cat "/path/to/package/directory/$2/$PKG_FILELIST"
+        else
+            echo "Please provide a package name to list its files."
+        fi
+    fi
+}
+
+remove_package() {
+    if [ "$1" = "remove" ]; then
+        if [ "$2" != "" ]; then
+            echo -n "Are you sure you want to remove $2?[y/n]: "
+            read ans
+            if [ "$ans" = "y" ]; then
+                # Kaldırma işlemleri burada yer alacak
+                # Gerekli komutlar ve işlemler eklenecek
+            fi
+        else
+            echo "Please specify a package to remove."
+        fi
+    fi
+}
+
+verify_package() {
+    local pkgname="$1"
+
+    if [ ! -f "/path/to/package/directory/$pkgname/$PKG_FILELIST" ]; then
+        echo "$pkgname: No such package in the database."
+        return 1
+    fi
+
+    # checking packet accuracy
+
+}
+
 if [ "$1" = "install" ]; then
     if [ "$2" = "" ]; then
         echo "you need to specify a package to install"
