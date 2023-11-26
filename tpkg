@@ -5,6 +5,11 @@
 # Set the repository URL where packages are hosted
 url="example.com/packages/"  # Replace with your website's URL
 root="/home/richard/root"        # Absolute path of the root directory
+# Check Root
+if [ "$(id -u)" != "0" ]; then
+    echo -e ""\033[0;31mSorry\033[0m, You need root permission to run this script.""
+    exit 1
+fi
 
 # Check if the repository URL is accessible
 check_url=$(curl -Is "$url" | head -n 1)
