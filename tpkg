@@ -10,6 +10,12 @@ default_root="/home/richard/root"    # Absolute path of the root directory
 url=${TPKG_URL:-$default_url}
 root=${TPKG_ROOT:-$default_root}
 
+if ! command -v lua &> /dev/null || ! command -v curl &> /dev/null || ! command -v busybox &> /dev/null || ! command -v tar &> /dev/null; then
+    echo -e "\033[0;31mThis script requires 'curl', 'busybox', 'tar', and 'lua' to function properly.\033[0m"
+    echo "Please install these dependencies before running the script."
+    exit 1
+fi
+
 # Logging function
 log() {
     echo "$(date): $1" >> "/home/$(whoami)/.tpkg/log.txt"
@@ -153,16 +159,6 @@ update_package() {
 list_packages() {
     echo "Installed packages:"
     ls -1 usr/tdb/
-}
-
-# Function to check dependencies
-check_dependencies() {
-    # Check if 'curl', 'busybox', and 'tar' commands exist
-    if ! command -v curl &> /dev/null || ! command -v busybox &> /dev/null || ! command -v tar &> /dev/null; then
-        echo -e "\033[0;31mThis script requires 'curl', 'busybox', and 'tar' to function properly.\033[0m"
-        echo "Please install these dependencies before running the script."
-        exit 1
-    fi
 }
 
 # Dependency Checking Function - Adding a message for missing dependency list
